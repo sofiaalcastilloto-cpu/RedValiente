@@ -1,0 +1,312 @@
+{% extends "base.html" %}
+
+{% block title %}Crear cuenta | Red Valiente{% endblock %}
+
+{% block content %}
+
+<div class="row justify-content-center py-3">
+
+    <div class="col-12 col-lg-8">
+
+        <div class="card p-4 p-md-5">
+
+            <div class="text-center mb-4">
+
+                <div
+                    class="rounded-circle d-inline-flex justify-content-center align-items-center mb-3"
+                    style="width: 75px; height: 75px; background-color: #F4EAF5;"
+                >
+                    <i class="fa-solid fa-user-plus text-purple fa-2x"></i>
+                </div>
+
+                <h2 class="fw-bold text-purple">
+                    Únete a Red Valiente
+                </h2>
+
+                <p class="text-muted">
+                    Regístrate y comienza a descubrir nuevas oportunidades.
+                </p>
+
+            </div>
+
+
+            <form
+                method="POST"
+                action="{{ url_for('registro') }}"
+                enctype="multipart/form-data"
+                id="formRegistro"
+            >
+
+                <div class="row">
+
+                    <div class="col-md-6 mb-3">
+
+                        <label for="nombre" class="form-label fw-semibold">
+                            Nombre completo
+                        </label>
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            id="nombre"
+                            name="nombre"
+                            placeholder="Escribe tu nombre completo"
+                            minlength="3"
+                            maxlength="100"
+                            autocomplete="name"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="col-md-6 mb-3">
+
+                        <label for="telefono" class="form-label fw-semibold">
+                            Número de teléfono
+                        </label>
+
+                        <input
+                            type="tel"
+                            class="form-control"
+                            id="telefono"
+                            name="telefono"
+                            placeholder="Ejemplo: 3001234567"
+                            maxlength="20"
+                            autocomplete="tel"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="col-12 mb-3">
+
+                        <label for="correo" class="form-label fw-semibold">
+                            Correo electrónico
+                        </label>
+
+                        <input
+                            type="email"
+                            class="form-control"
+                            id="correo"
+                            name="correo"
+                            placeholder="ejemplo@correo.com"
+                            maxlength="150"
+                            autocomplete="email"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="col-md-6 mb-3">
+
+                        <label for="clave" class="form-label fw-semibold">
+                            Contraseña
+                        </label>
+
+                        <input
+                            type="password"
+                            class="form-control"
+                            id="clave"
+                            name="clave"
+                            placeholder="Mínimo 6 caracteres"
+                            minlength="6"
+                            autocomplete="new-password"
+                            required
+                        >
+
+                        <small class="text-muted">
+                            Debe tener al menos 6 caracteres.
+                        </small>
+
+                    </div>
+
+
+                    <div class="col-md-6 mb-3">
+
+                        <label
+                            for="confirmar_clave"
+                            class="form-label fw-semibold"
+                        >
+                            Confirmar contraseña
+                        </label>
+
+                        <input
+                            type="password"
+                            class="form-control"
+                            id="confirmar_clave"
+                            name="confirmar_clave"
+                            placeholder="Repite tu contraseña"
+                            minlength="6"
+                            autocomplete="new-password"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="col-12 mb-4">
+
+                        <label
+                            for="pdf_soporte"
+                            class="form-label fw-semibold"
+                        >
+                            Documento de soporte en PDF
+                        </label>
+
+                        <input
+                            type="file"
+                            class="form-control"
+                            id="pdf_soporte"
+                            name="pdf_soporte"
+                            accept=".pdf,application/pdf"
+                            required
+                        >
+
+                        <small class="text-muted">
+                            Adjunta un documento PDF de máximo 5 MB.
+                        </small>
+
+                        <div
+                            id="nombreArchivo"
+                            class="small text-purple mt-2"
+                        ></div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="alert alert-light border">
+
+                    <i class="fa-solid fa-circle-info text-purple me-2"></i>
+
+                    Después de registrarte, tu cuenta quedará pendiente
+                    de aprobación por parte del administrador.
+
+                </div>
+
+
+                <button
+                    type="submit"
+                    class="btn btn-primary-custom w-100 fw-bold"
+                    id="btnRegistro"
+                >
+                    <i class="fa-solid fa-user-plus me-2"></i>
+                    Crear mi cuenta
+                </button>
+
+            </form>
+
+
+            <div class="text-center mt-4">
+
+                <p class="mb-1 text-muted">
+                    ¿Ya tienes una cuenta?
+                </p>
+
+                <a
+                    href="{{ url_for('login') }}"
+                    class="text-purple fw-bold text-decoration-none"
+                >
+                    Iniciar sesión
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+
+{% block extra_js %}
+
+<script>
+
+    const formulario = document.getElementById("formRegistro");
+
+    const clave = document.getElementById("clave");
+
+    const confirmarClave = document.getElementById("confirmar_clave");
+
+    const archivoPDF = document.getElementById("pdf_soporte");
+
+    const nombreArchivo = document.getElementById("nombreArchivo");
+
+
+    archivoPDF.addEventListener("change", function () {
+
+        const archivo = this.files[0];
+
+        nombreArchivo.textContent = "";
+
+        if (!archivo) {
+            return;
+        }
+
+        const extensionCorrecta = archivo.name.toLowerCase().endsWith(".pdf");
+
+        const tamanoMaximo = 5 * 1024 * 1024;
+
+        if (!extensionCorrecta) {
+
+            alert("El documento debe tener formato PDF.");
+
+            this.value = "";
+
+            return;
+
+        }
+
+        if (archivo.size > tamanoMaximo) {
+
+            alert("El archivo no puede superar los 5 MB.");
+
+            this.value = "";
+
+            return;
+
+        }
+
+        nombreArchivo.textContent = "Archivo seleccionado: " + archivo.name;
+
+    });
+
+
+    formulario.addEventListener("submit", function (evento) {
+
+        if (clave.value !== confirmarClave.value) {
+
+            evento.preventDefault();
+
+            alert("Las contraseñas no coinciden.");
+
+            confirmarClave.focus();
+
+            return;
+
+        }
+
+        if (clave.value.length < 6) {
+
+            evento.preventDefault();
+
+            alert("La contraseña debe tener al menos 6 caracteres.");
+
+            clave.focus();
+
+            return;
+
+        }
+
+    });
+
+</script>
+
+{% endblock %}

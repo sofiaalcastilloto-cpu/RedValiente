@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}Iniciar sesión | Red Valiente{% endblock %}
+
+{% block content %}
+
+<div class="row justify-content-center align-items-center py-4">
+
+    <div class="col-12 col-md-8 col-lg-5">
+
+        <div class="card p-4 p-md-5">
+
+            <div class="text-center mb-4">
+
+                <div
+                    class="rounded-circle d-inline-flex justify-content-center align-items-center mb-3"
+                    style="width: 75px; height: 75px; background-color: #F4EAF5;"
+                >
+                    <i class="fa-solid fa-heart text-purple fa-2x"></i>
+                </div>
+
+                <h2 class="fw-bold text-purple">
+                    Bienvenida a Red Valiente
+                </h2>
+
+                <p class="text-muted">
+                    Ingresa a tu cuenta para continuar.
+                </p>
+
+            </div>
+
+
+            <form method="POST" action="{{ url_for('login') }}">
+
+                <div class="mb-3">
+
+                    <label for="correo" class="form-label fw-semibold">
+                        Correo electrónico
+                    </label>
+
+                    <div class="input-group">
+
+                        <span class="input-group-text bg-purple-light">
+                            <i class="fa-solid fa-envelope text-purple"></i>
+                        </span>
+
+                        <input
+                            type="email"
+                            class="form-control"
+                            id="correo"
+                            name="correo"
+                            placeholder="ejemplo@correo.com"
+                            autocomplete="email"
+                            required
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <div class="mb-4">
+
+                    <label for="clave" class="form-label fw-semibold">
+                        Contraseña
+                    </label>
+
+                    <div class="input-group">
+
+                        <span class="input-group-text bg-purple-light">
+                            <i class="fa-solid fa-lock text-purple"></i>
+                        </span>
+
+                        <input
+                            type="password"
+                            class="form-control"
+                            id="clave"
+                            name="clave"
+                            placeholder="Escribe tu contraseña"
+                            autocomplete="current-password"
+                            required
+                        >
+
+                        <button
+                            class="btn btn-outline-secondary"
+                            type="button"
+                            id="mostrarClave"
+                            aria-label="Mostrar contraseña"
+                        >
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <button
+                    type="submit"
+                    class="btn btn-primary-custom w-100 fw-bold"
+                >
+                    <i class="fa-solid fa-right-to-bracket me-2"></i>
+                    Iniciar sesión
+                </button>
+
+            </form>
+
+
+            <div class="text-center mt-4">
+
+                <p class="mb-0 text-muted">
+                    ¿Todavía no tienes una cuenta?
+                </p>
+
+                <a
+                    href="{{ url_for('registro') }}"
+                    class="text-purple fw-bold text-decoration-none"
+                >
+                    Crear una cuenta
+                </a>
+
+            </div>
+
+        </div>
+
+
+        <div class="text-center mt-4">
+
+            <small class="text-muted">
+                Red Valiente - Oportunidades para crecer y avanzar.
+            </small>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+
+{% block extra_js %}
+
+<script>
+
+    const botonMostrar = document.getElementById("mostrarClave");
+    const campoClave = document.getElementById("clave");
+
+    if (botonMostrar && campoClave) {
+
+        botonMostrar.addEventListener("click", function () {
+
+            if (campoClave.type === "password") {
+
+                campoClave.type = "text";
+
+                botonMostrar.innerHTML = '<i class="fa-solid fa-eye-slash"></i>';
+
+            } else {
+
+                campoClave.type = "password";
+
+                botonMostrar.innerHTML = '<i class="fa-solid fa-eye"></i>';
+
+            }
+
+        });
+
+    }
+
+</script>
+
+{% endblock %}

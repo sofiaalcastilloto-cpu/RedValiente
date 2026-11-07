@@ -1,0 +1,194 @@
+﻿import os
+import sqlite3
+import hashlib
+from flask import Flask, render_template, request, redirect, url_for, session, flash
+from werkzeug.utils import secure_filename
+
+app = Flask(__name__)
+app.secret_key = "red_valiente_secret_key"
+
+UPLOAD_FOLDER = 'static/uploads'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+def get_db_connection():
+    conn = sqlite3.connect('red_valiente.db')
+    conn.row_factory = sqlite3.Row
+    # Sprint 4: Habilitar llaves forÃ¡neas en SQLite
+    conn.execute('PRAGMA foreign_keys = ON')
+    return conn
+
+def init_db():
+    conn = get_db_connection()
+    
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS usuarias (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nombre TEXT NOT NULL,
+            correo TEXT UNIQUE NOT NULL,
+            telefono TEXT NOT NULL,
+            clave TEXT NOT NULL,
+            estado TEXT NOT NULL DEFAULT 'Pendiente',
+            pdf_soporte TEXT
+        )
+    ''')
+
+    # Sprint 4: Tabla de vacantes dinÃ¡mica
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS vacantes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            titulo TEXT,
+            empresa TEXT,
+            salario TEXT,
+            jornada TEXT
+        )
+    ''')
+
+    # Sprint 4: Tabla intermedia (Postulaciones) con FOREIGN KEYS
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS postulaciones (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            usuaria_id INTEGER,
+            vacante_id INTEGER,
+            fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (usuaria_id) REFERENCES usuarias (id),
+            FOREIGN KEY (vacante_id) REFERENCES vacantes (id)
+        )
+    ''')
+    
+    admin = conn.execute("SELECT * FROM usuarias WHERE correo='admin@redvaliente.org'").fetchone()
+    if not admin:
+        clave_admin = hashlib.sha256("admin123".encode()).hexdigest()
+        conn.execute("INSERT INTO usuarias (nombre, correo, telefono, clave, estado) VALUES (?, ?, ?, ?, ?)",
+                     ("Admin", "admin@redvaliente.org", "0000", clave_admin, "Validada"))
+
+    # Insertar vacantes de prueba si la tabla estÃ¡ vacÃ­a
+    if not conn.execute("SELECT * FROM vacantes").fetchone():
+        vacantes_iniciales = [
+            ("Auxiliar de EnfermerÃ­a", "ClÃ­nica San JosÃ©", "$1'800.000", "Tiempo Completo"),
+            ("Desarrolladora Junior", "Tech Solutions", "$2'500.000", "Tiempo Completo"),
+            ("AtenciÃ³n al Cliente", "Teleperformance", "$1'500.000", "Horario Flexible")
+        ]
+        conn.executemany("INSERT INTO vacantes (titulo, empresa, salario, jornada) VALUES (?, ?, ?, ?)", vacantes_iniciales)
+
+    conn.commit()
+    conn.close()
+
+init_db()
+
+@app.route("/")
+def inicio():
+    if "usuario" in session:
+        return redirect(url_for("ver_empleos"))
+    return redirect(url_for("login"))
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        correo = request.form.get("correo")
+        clave = request.form.get("clave")
+        clave_encriptada = hashlib.sha256(clave.encode()).hexdigest()
+        
+        conn = get_db_connection()
+        usuaria = conn.execute('SELECT * FROM usuarias WHERE correo = ? AND clave = ?', (correo, clave_encriptada)).fetchone()
+        conn.close()
+        
+        if usuaria:
+            session["usuario"] = usuaria["correo"]
+            session["nombre"] = usuaria["nombre"]
+            session["usuaria_id"] = usuaria["id"]
+            if usuaria["correo"] == "admin@redvaliente.org":
+                return redirect(url_for("panel_admin"))
+            else:
+                return redirect(url_for("ver_empleos"))
+        else:
+            flash("Credenciales incorrectas.", "error")
+            
+    return render_template("login.html")
+
+@app.route("/registro", methods=["GET", "POST"])
+def registro():
+    if request.method == "POST":
+        nombre = request.form.get("nombre")
+        correo = request.form.get("correo")
+        telefono = request.form.get("telefono")
+        clave = request.form.get("clave")
+        clave_encriptada = hashlib.sha256(clave.encode()).hexdigest()
+        
+        pdf_file = request.files.get("pdf_soporte")
+        pdf_filename = None
+        if pdf_file and pdf_file.filename.endswith('.pdf'):
+            pdf_filename = secure_filename(pdf_file.filename)
+            pdf_file.save(os.path.join(app.config['UPLOAD_FOLDER'], pdf_filename))
+
+        conn = get_db_connection()
+        # Sprint 4: Bloque try-except para IntegrityError
+        try:
+            conn.execute('INSERT INTO usuarias (nombre, correo, telefono, clave, pdf_soporte) VALUES (?, ?, ?, ?, ?)',
+                         (nombre, correo, telefono, clave_encriptada, pdf_filename))
+            conn.commit()
+            flash("Registro exitoso. Inicia sesiÃ³n.", "success")
+            return redirect(url_for("login"))
+        except sqlite3.IntegrityError:
+            flash("El correo ya estÃ¡ registrado.", "error")
+        finally:
+            conn.close()
+
+    return render_template("registro.html")
+
+@app.route("/empleos")
+def ver_empleos():
+    if "usuario" not in session:
+        return redirect(url_for("login"))
+    
+    conn = get_db_connection()
+    usuaria_actual = conn.execute('SELECT * FROM usuarias WHERE correo = ?', (session["usuario"],)).fetchone()
+    # Leer vacantes desde la base de datos
+    vacantes_lista = conn.execute('SELECT * FROM vacantes').fetchall()
+    conn.close()
+    
+    return render_template("empleos.html", vacantes=vacantes_lista, usuaria=usuaria_actual)
+
+# Sprint 4: Nueva ruta para postulaciÃ³n interactiva (HU-04)
+@app.route("/postular/<int:vacante_id>")
+def postular(vacante_id):
+    if "usuario" not in session or session.get("usuario") == "admin@redvaliente.org":
+        return redirect(url_for("login"))
+    
+    conn = get_db_connection()
+    try:
+        conn.execute('INSERT INTO postulaciones (usuaria_id, vacante_id) VALUES (?, ?)', 
+                     (session["usuaria_id"], vacante_id))
+        conn.commit()
+        flash("Â¡PostulaciÃ³n realizada con Ã©xito!", "success")
+    except Exception as e:
+        flash("Hubo un error al postularte.", "error")
+    finally:
+        conn.close()
+    return redirect(url_for("ver_empleos"))
+
+@app.route("/admin")
+def panel_admin():
+    if session.get("usuario") != "admin@redvaliente.org":
+        return redirect(url_for("ver_empleos"))
+        
+    conn = get_db_connection()
+    # Sprint 4: INNER JOIN para cruzar datos en el panel
+    query = '''
+        SELECT u.nombre, u.correo, u.telefono, u.pdf_soporte, v.titulo as vacante, p.fecha
+        FROM postulaciones p
+        INNER JOIN usuarias u ON p.usuaria_id = u.id
+        INNER JOIN vacantes v ON p.vacante_id = v.id
+    '''
+    postulaciones_realizadas = conn.execute(query).fetchall()
+    conn.close()
+    
+    return render_template("admin.html", postulaciones=postulaciones_realizadas)
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("login"))
+
+if __name__ == "__main__":
+    app.run(debug=True)

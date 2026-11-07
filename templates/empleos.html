@@ -1,0 +1,247 @@
+
+{% extends "base.html" %}
+
+{% block title %}Ofertas de empleo | Red Valiente{% endblock %}
+
+{% block content %}
+
+<div class="container py-4">
+
+    <!-- ENCABEZADO -->
+    <div class="mb-4">
+        <h2 class="fw-bold text-purple">
+            <i class="fa-solid fa-briefcase me-2"></i>
+            Ofertas de empleo
+        </h2>
+        <p class="text-muted">
+            Encuentra oportunidades laborales y da el siguiente paso en tu crecimiento profesional.
+        </p>
+    </div>
+
+    <!-- MENSAJE SEGÚN EL ESTADO DE LA CUENTA -->
+    {% if usuaria and usuaria['estado'] != 'Validada' %}
+    <div class="alert alert-warning d-flex align-items-start">
+        <i class="fa-solid fa-clock me-2 mt-1"></i>
+        <div>
+            <strong>Tu cuenta está pendiente de aprobación.</strong>
+            <p class="mb-0">
+                Puedes consultar las ofertas disponibles, pero podrás postularte
+                cuando el administrador haya validado tu cuenta.
+            </p>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- FILTROS -->
+    <div class="card p-3 p-md-4 mb-4">
+        <h5 class="fw-bold text-purple mb-3">
+            <i class="fa-solid fa-filter me-2"></i>
+            Filtrar ofertas
+        </h5>
+
+        <form method="GET" action="{{ url_for('ver_empleos') }}">
+            <div class="row g-3">
+
+                <div class="col-12 col-md-4">
+                    <label for="sector" class="form-label fw-semibold">
+                        Sector laboral
+                    </label>
+                    <select class="form-select" id="sector" name="sector">
+                        <option value="">Todos los sectores</option>
+                        {% for sector in sectores %}
+                        <option value="{{ sector }}"
+                            {% if sector_sel == sector %}selected{% endif %}>
+                            {{ sector }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <label for="jornada" class="form-label fw-semibold">
+                        Tipo de jornada
+                    </label>
+                    <select class="form-select" id="jornada" name="jornada">
+                        <option value="">Todas las jornadas</option>
+                        {% for jornada in jornadas %}
+                        <option value="{{ jornada }}"
+                            {% if jornada_sel == jornada %}selected{% endif %}>
+                            {{ jornada }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <label for="ubicacion" class="form-label fw-semibold">
+                        Ubicación
+                    </label>
+                    <select class="form-select" id="ubicacion" name="ubicacion">
+                        <option value="">Todas las ubicaciones</option>
+                        {% for ubicacion in ubicaciones %}
+                        <option value="{{ ubicacion }}"
+                            {% if ubicacion_sel == ubicacion %}selected{% endif %}>
+                            {{ ubicacion }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-12 d-flex flex-wrap gap-2">
+                    <button type="submit" class="btn btn-primary-custom">
+                        <i class="fa-solid fa-magnifying-glass me-2"></i>
+                        Aplicar filtros
+                    </button>
+
+                    <a href="{{ url_for('ver_empleos') }}"
+                       class="btn btn-outline-secondary">
+                        <i class="fa-solid fa-rotate-left me-2"></i>
+                        Limpiar filtros
+                    </a>
+                </div>
+
+            </div>
+        </form>
+    </div>
+
+    <!-- RESULTADOS -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0">Vacantes disponibles</h5>
+        <span class="badge rounded-pill text-bg-light border">
+            {{ vacantes|length }} ofertas
+        </span>
+    </div>
+
+    {% if vacantes %}
+
+    <div class="row g-4">
+
+        {% for vacante in vacantes %}
+
+        <div class="col-12 col-md-6 col-lg-4">
+
+            <div class="card h-100 p-3 p-md-4">
+
+                <!-- SECTOR -->
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <span class="badge rounded-pill"
+                          style="background-color: #F4EAF5; color: #4A154B;">
+                        {{ vacante['sector'] or 'General' }}
+                    </span>
+
+                    <i class="fa-solid fa-building text-purple fa-lg"></i>
+                </div>
+
+                <!-- INFORMACIÓN PRINCIPAL -->
+                <h5 class="fw-bold text-purple">
+                    {{ vacante['titulo'] }}
+                </h5>
+
+                <p class="fw-semibold mb-2">
+                    <i class="fa-solid fa-building me-2 text-muted"></i>
+                    {{ vacante['empresa'] }}
+                </p>
+
+                <div class="mb-3">
+
+                    <p class="text-muted mb-2">
+                        <i class="fa-solid fa-location-dot me-2"></i>
+                        {{ vacante['ubicacion'] or 'Ubicación no especificada' }}
+                    </p>
+
+                    <p class="text-muted mb-2">
+                        <i class="fa-solid fa-clock me-2"></i>
+                        {{ vacante['jornada'] }}
+                    </p>
+
+                    <p class="fw-bold mb-2" style="color: #4A154B;">
+                        <i class="fa-solid fa-money-bill-wave me-2"></i>
+                        {{ vacante['salario'] }}
+                    </p>
+
+                </div>
+
+                <!-- DESCRIPCIÓN -->
+                <div class="mb-3">
+                    <h6 class="fw-bold">Descripción del empleo</h6>
+                    <p class="text-muted small mb-0">
+                        {{ vacante['descripcion'] or 'No hay una descripción disponible para esta vacante.' }}
+                    </p>
+                </div>
+
+                <div class="mt-auto">
+
+                    {% if vacante['id'] in ids_postuladas %}
+
+                        <button type="button"
+                                class="btn btn-outline-success w-100"
+                                disabled>
+                            <i class="fa-solid fa-circle-check me-2"></i>
+                            Ya estás postulada
+                        </button>
+
+                    {% elif usuaria and usuaria['estado'] == 'Validada' %}
+
+                        <form method="POST"
+                              action="{{ url_for('postular', id_vacante=vacante['id']) }}"
+                              onsubmit="return confirm('¿Estás segura de que deseas postularte a esta oferta?');">
+
+                            <button type="submit"
+                                    class="btn btn-primary-custom w-100">
+                                <i class="fa-solid fa-paper-plane me-2"></i>
+                                Postularme
+                            </button>
+
+                        </form>
+
+                    {% else %}
+
+                        <button type="button"
+                                class="btn btn-secondary w-100"
+                                disabled>
+                            <i class="fa-solid fa-lock me-2"></i>
+                            Cuenta pendiente de aprobación
+                        </button>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+    {% else %}
+
+    <!-- SIN RESULTADOS -->
+    <div class="card text-center p-5">
+
+        <div class="mb-3">
+            <i class="fa-solid fa-magnifying-glass fa-3x text-purple"></i>
+        </div>
+
+        <h5 class="fw-bold">No encontramos ofertas</h5>
+
+        <p class="text-muted mb-3">
+            No hay vacantes que coincidan con los filtros seleccionados.
+            Intenta cambiar los criterios de búsqueda.
+        </p>
+
+        <div>
+            <a href="{{ url_for('ver_empleos') }}"
+               class="btn btn-primary-custom">
+                Ver todas las ofertas
+            </a>
+        </div>
+
+    </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

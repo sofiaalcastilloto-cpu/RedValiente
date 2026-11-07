@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block nav %}
+<span class="navbar-text text-white me-3">Admin: <strong>Michel A.</strong></span>
+<a class="nav-link text-white badge bg-danger text-wrap" href="{{ url_for('login') }}">Cerrar sesión</a>
+{% endblock %}
+
+{% block content %}
+<h2 class="mb-4 font-weight-bold" style="color: var(--purple-main);">Validación de perfiles | Panel de Administración</h2>
+
+<!-- Métricas rápidas -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card card-custom p-3 bg-white border-start border-4 border-primary">
+            <h6 class="text-muted">Usuarias Registradas</h6>
+            <h3 class="mb-0 font-weight-bold">1285</h3>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card card-custom p-3 bg-white border-start border-4 border-warning">
+            <h6 class="text-muted">Perfiles por Validar</h6>
+            <h3 class="mb-0 font-weight-bold text-warning">5 Pendientes</h3>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card card-custom p-3 bg-white border-start border-4 border-success">
+            <h6 class="text-muted">Vacantes Activas</h6>
+            <h3 class="mb-0 font-weight-bold text-success">18 Ofertas</h3>
+        </div>
+    </div>
+</div>
+
+<!-- Tabla de perfiles -->
+<div class="card card-custom p-3">
+    <table class="table table-hover align-middle">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Documentación</th>
+                <th>Estado</th>
+                <th>Acción</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for u in usuarias %}
+            <tr>
+                <td><strong>{{ u.id }}</strong></td>
+                <td>{{ u.nombre }}</td>
+                <td><a href="#" class="text-decoration-none">Verificada (PDF) 📄</a></td>
+                <td>
+                    {% if u.estado == 'Validada' %}
+                    <span class="badge bg-success">Validada</span>
+                    {% else %}
+                    <span class="badge bg-warning text-dark">Pendiente</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if u.estado == 'Pendiente' %}
+                    <a href="{{ url_for('aprobar', id_usr=u.id) }}" class="btn btn-sm btn-success">Aprobar</a>
+                    {% else %}
+                    <span class="text-muted small">Activa</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

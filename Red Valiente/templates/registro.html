@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block nav %}
+<a class="nav-link text-white" href="{{ url_for('login') }}">Inicio</a>
+<a class="nav-link text-white" href="{{ url_for('ver_empleos') }}">Empleos</a>
+<a class="nav-link text-white" href="#">Ayuda</a>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-3">
+    <div class="col-md-6">
+        <div class="card card-custom p-4">
+            <h3 class="text-center font-weight-bold mb-1" style="color: var(--purple-main);">Regístrate en RED VALIENTE</h3>
+            <p class="text-center text-muted small mb-4">🔒 Registro confidencial, seguro y protegido.</p>
+            
+            <form action="{{ url_for('registro') }}" method="POST" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label class="form-label font-weight-bold">Nombre Completo</label>
+                    <input type="text" name="nombre" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label font-weight-bold">Correo electrónico</label>
+                    <input type="email" name="correo" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label font-weight-bold">Número Telefónico</label>
+                    <input type="tel" name="telefono" class="form-control" required>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label font-weight-bold">Crea tu contraseña</label>
+                        <input type="password" name="clave" class="form-control" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label font-weight-bold">Confirma tu contraseña</label>
+                        <input type="password" class="form-control" required>
+                    </div>
+                </div>
+                
+                <!-- NUEVO: CAMPO PARA SUBIR EL PDF -->
+                <div class="mb-4">
+                    <label class="form-label font-weight-bold" style="color: var(--purple-main);">Soporte de validación (PDF)</label>
+                    <input type="file" name="pdf_soporte" class="form-control" accept=".pdf" required>
+                </div>
+
+                <button type="submit" class="btn btn-valiente w-100 py-2 mt-2">INGRESAR AL PORTAL SEGURO</button>
+            </form>
+
+            <div class="text-center mt-3">
+                <p class="mb-0">¿Ya tienes cuenta? <a href="{{ url_for('login') }}" style="color: var(--purple-main); font-weight: bold;">Inicia sesión aquí.</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
